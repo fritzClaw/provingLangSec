@@ -1,6 +1,6 @@
 # Intent: Provably injection-free code from AI agents
 
-> **Status:** draft. We're working through grilling round 1. Each decision goes into the log below once the owner answers it.
+> **Status:** draft. Grilling round 1 is still open, and each decision goes into the log below once the owner answers it. Literature review v1 is in [docs/literature-review.md](docs/literature-review.md), with its BibTeX in [docs/references.bib](docs/references.bib).
 
 ## Original (German, verbatim)
 
@@ -33,10 +33,10 @@ The recommended answer is in parentheses.
 2. Definition of done: a single `make demo` that checks the proof offline and deterministically, rejects the vulnerable variant, and shows the exploit failing on the verified variant. A separate, optional `make agent` regenerates the code live. (yes)
 3. Meaning of "injection-free":
    - output is built only by an unparser;
-   - `parse(unparse(t)) = t` holds for all trees `t`;
-   - untrusted input enters the tree only as leaves.
+   - `parse_decode(unparse_encode(t)) = t` holds for all trees `t`, including trees whose data tokens contain arbitrary strings (the extended round-trip of Hermerschmidt et al. 2015);
+   - untrusted input enters the tree only as literal leaves (McHammerCoder condition 3).
 
-   (yes)
+   See section 2.7 of the literature review. (yes)
 4. Scope: prove injection-freedom only, and cover functional behavior with tests. (yes)
 5. Trust model, following proof-carrying code:
    - the LLM is untrusted;
@@ -48,7 +48,7 @@ The recommended answer is in parentheses.
    (yes)
 6. The verified code is the code that runs. There is no hand-written model of other code. (yes)
 7. First target: SQL injection against SQLite, on a small SQL subset. (yes)
-8. F* and Coq are examples. The prover is picked after the literature review, against explicit criteria. (yes)
+8. F* and Coq are examples. The prover is picked after the literature review, against explicit criteria. The comparison is in section 7 of the literature review; the current lean is F*, with Dafny as runner-up. (yes)
 9. The literature review comes first: `docs/literature-review.md` plus `references.bib`. (yes)
 10. "Always" is enforced by a deterministic gate (CLI, pre-commit, CI) that fails closed. Agent adapters are thin layers on top, Claude Code first. (yes)
 11. DevContainer host: Docker with VS Code or the devcontainer CLI, on both x86_64 and arm64. (yes)
