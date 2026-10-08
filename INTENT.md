@@ -1,6 +1,6 @@
 # Intent: Provably injection-free code from AI agents
 
-> **Status:** draft. Round 1 was decided on 2026-10-08 and grilling round 2 is open. Each decision goes into the log below once the owner answers it. Literature review v1 is in [docs/literature-review.md](docs/literature-review.md), with its BibTeX in [docs/references.bib](docs/references.bib).
+> **Status:** draft. Rounds 1 and 2 were decided on 2026-10-08 and grilling round 3 is open. Each decision goes into the log below once the owner answers it. Literature review v1 is in [docs/literature-review.md](docs/literature-review.md), with its BibTeX in [docs/references.bib](docs/references.bib).
 
 ## Original (German, verbatim)
 
@@ -25,33 +25,33 @@ Translator's notes:
 - "eine Injection Schwachstelle" can mean one concrete vulnerability or one class of injection (Q7).
 - "deterministischer automatischer Beweiser" can mean an automated prover (for example an SMT solver) or a checker for a proof the agent wrote (Q5).
 
-## Open questions (round 2)
+## Open questions (round 3)
 
 The recommended answer is in parentheses.
 
-13. Proof tool: Dafny, with the example app compiled to Python and run with Python's built-in `sqlite3`. This replaces the round-1 lean towards F\*, because Dafny has the strongest evidence that LLMs can write its proofs and compiles to mainstream languages. (yes)
-14. Two layers:
-    - an SQL layer that I write and prove once against the approved theorem, then freeze;
-    - an application layer written by the agent, where R2 and R3 hold through Dafny's types and modules: untrusted input can only become literals, identifiers come from an allowlist, and the unparser is the only source of executable queries;
-    - the Python glue is frozen framework code;
-    - `make agent` regenerates the application layer only.
+24. Covering every output language, in two stages:
+    - Stage 1, the prototype:
+      - a language-definition format (syntax tree, encoders, parser model) plus a fixed theorem template;
+      - for each language, its round-trip proof uses a lemma library;
+      - SQL is the first definition and is built in this repo;
+      - as a generality check, the in-container agent writes a second, deliberately non-standard language and its proof on its own.
+    - Stage 2, after the prototype: one generic engine, proven once, for all definitions that pass a mechanical well-formedness check.
 
     (yes)
-15. SQL subset: `SELECT … FROM … [WHERE …]` with comparisons, `AND`/`OR`/`NOT`, parentheses, allowlisted column names, string and integer literals. The unparser fully parenthesizes. `LIKE … ESCAPE` is a stretch goal for nested encoding. (yes)
-16. Example app: a command-line user directory (`userdir search <name>`) on a seeded SQLite database with a secret column. The vulnerable variant concatenates strings and leaks the secrets through a `UNION` exploit. The app's intent is in `examples/userdir/INTENT.md`. (yes)
-17. Differential tests against the real SQLite: string literals must decode back to the original, and `EXPLAIN` structure must not depend on the data. Known SQLite quirks are handled explicitly: identifiers come only from the schema, and input with NUL is rejected, so the theorem covers NUL-free data. (yes)
-18. Agent harness: Claude Code headless in the DevContainer, using your own login or `ANTHROPIC_API_KEY` (never committed). Budget of 5 attempts or 30 minutes; the gate decides success; transcripts are saved. (yes)
-19. The gate checks, in order:
-    1. frozen files match the manifest hashes;
-    2. there are no proof-skipping constructs;
-    3. everything verifies with pinned Dafny and Z3 versions and resource limits;
-    4. functional and exploit tests pass.
+25. Roles in the self-contained setup:
+    - Claude in the cloud session builds the framework once: the DevContainer, the gate, the theorem template, the lemma library with the SQL definition, the agent instructions and the example.
+    - Claude Code in the DevContainer writes each project's specification (untrusted inputs, allowed queries, new language definitions), gets the owner's approval, then writes the implementation and its proofs until the gate passes.
+    - The 30-minute limit is a hard stop, not an estimate. The evaluation measures the real time.
 
-    It runs as a pre-commit hook, in GitHub Actions and as a Claude Code hook. (yes)
-20. Theorem approval: each theorem statement comes to the owner as a pull request with a plain-English reading and a list of what it does not cover. Approval updates the manifest. (yes)
-21. License: switch from GPLv3 to Apache-2.0, so that other projects can adopt the gate, skill and SQL layer. (yes)
-22. Evaluation: 10 runs of `make agent` with success rate, time and cost, plus mutation tests showing the gate rejects broken encoders and weakened theorems. (yes)
-23. DevContainer: built locally from a Dockerfile with identical steps on arm64 and x86_64. A prebuilt image on GitHub's registry is added only if the build takes longer than about 10 minutes. (yes)
+    (yes)
+26. Local approval of specifications: `make approve` shows each new or changed specification in plain English and records its hash in the manifest through a commit by the owner. Pull requests remain the route when working through GitHub. (yes)
+27. Parser fidelity, as in [docs/analysis/receiver-fidelity.md](docs/analysis/receiver-fidelity.md):
+    - SQLite main line (level B): the grammar subset comes from SQLite's own `parse.y`. The model is checked against an instrumented debug build of SQLite (tokens, parse trees, exhaustive literal-lexing tests up to a bounded length). The double-quote misfeature is switched off and NUL is rejected.
+    - SQLite second variant (level A): parameter binding, so untrusted data never reaches SQLite's parser.
+    - Custom languages (level A): the interpreter embeds the verified parser.
+    - Later: validate SQLite's generated parser against its grammar.
+
+    (yes)
 
 ## Decision log
 
@@ -69,3 +69,14 @@ The recommended answer is in parentheses.
 | 10 | Meaning of "always" | A deterministic gate (CLI, pre-commit hook, CI) enforces it and blocks anything unproven. Agent adapters are thin layers on top, Claude Code first. | 2026-10-08 |
 | 11 | DevContainer host | VS Code Dev Containers on arm64 and x86_64. | 2026-10-08 |
 | 12 | Way of working | This file is the single source of truth. All documentation is in English. | 2026-10-08 |
+| 13 | Proof tool | Owner's rule: decide by experiment if unsure, and switch tools if the implementation looks unlikely to succeed. The experiment ([spikes/q13-dafny-vs-fstar](spikes/q13-dafny-vs-fstar/README.md)) chose Dafny, compiled to Python. The gate verifies with a pinned seed and resource limit, and CI adds a multi-seed stability check. | 2026-10-08 |
+| 14 | Layers and generality | A library of reusable proofs is one building block. The approach must also apply to every language emitted to an interpreter, including custom, non-standard ones. The mechanism is decided in Q24. | 2026-10-08 |
+| 15 | SQL subset | `SELECT … FROM … [WHERE …]` with comparisons, `AND`/`OR`/`NOT`, parentheses, allowlisted columns, string and integer literals; fully parenthesized. `LIKE … ESCAPE` is a stretch goal. | 2026-10-08 |
+| 16 | Example app | Command-line `userdir search <name>` on a seeded SQLite database with a secret column. The vulnerable variant leaks the secrets via a `UNION` exploit. The intent is in `examples/userdir/INTENT.md`. | 2026-10-08 |
+| 17 | Parser fidelity | The owner asked for an analysis of the options, judged by precision ([docs/analysis/receiver-fidelity.md](docs/analysis/receiver-fidelity.md)). The decision is Q27. | 2026-10-08 |
+| 18 | Agent harness | The setup is self-contained. Claude Code inside the DevContainer writes the implementation and the specification. The owner expects the prototype app plus its specification to take well under 30 minutes. The roles are decided in Q25. | 2026-10-08 |
+| 19 | Gate | Checks frozen-file hashes, proof-skipping constructs, verification with pinned versions and limits, then functional and exploit tests. Runs as a pre-commit hook, in GitHub Actions and as a Claude Code hook. | 2026-10-08 |
+| 20 | Theorem approval | A pull request with the statement, a plain-English reading and a list of what it does not cover. Approval updates the manifest. | 2026-10-08 |
+| 21 | License | Apache-2.0 (applied 2026-10-08). | 2026-10-08 |
+| 22 | Evaluation | 10 `make agent` runs (success rate, time, cost), plus mutation tests on encoders and theorem statements. | 2026-10-08 |
+| 23 | DevContainer build | Built locally from a Dockerfile, with the same steps on arm64 and x86_64. A prebuilt image is added only if the build exceeds about 10 minutes. | 2026-10-08 |

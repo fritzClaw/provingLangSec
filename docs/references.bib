@@ -1,4 +1,4 @@
-% references.bib -- literature review for provingLangSec
+% references.bib -- bibliography for docs/literature-review.md and docs/analysis/*.md (provingLangSec)
 % Bibliographic data retrieved 2026-10-08 from Crossref, DataCite, arXiv and publisher pages;
 % no entry was typed from memory. Keys follow <firstauthor><year><topic>.
 
@@ -43,6 +43,19 @@
   pages = {615--628},
   year = {2014},
   url = {https://www.usenix.org/conference/osdi14/technical-sessions/presentation/bangert}
+}
+
+@article{bastani2017glade,
+  author = {Bastani, Osbert and Sharma, Rahul and Aiken, Alex and Liang, Percy},
+  title = {{Synthesizing program input grammars}},
+  journal = {ACM SIGPLAN Notices},
+  volume = {52},
+  number = {6},
+  pages = {95--110},
+  publisher = {Association for Computing Machinery (ACM)},
+  year = {2017},
+  doi = {10.1145/3140587.3062349},
+  url = {https://doi.org/10.1145/3140587.3062349}
 }
 
 @inproceedings{bieschke2017mchammercoder,
@@ -298,6 +311,17 @@
   url = {https://doi.org/10.1145/3611643.3616243}
 }
 
+@inproceedings{gopinath2020mimid,
+  author = {Gopinath, Rahul and Mathis, Björn and Zeller, Andreas},
+  title = {{Mining input grammars from dynamic control flow}},
+  booktitle = {Proceedings of the 28th ACM Joint Meeting on European Software Engineering Conference and Symposium on the Foundations of Software Engineering},
+  pages = {172--183},
+  publisher = {ACM},
+  year = {2020},
+  doi = {10.1145/3368089.3409679},
+  url = {https://doi.org/10.1145/3368089.3409679}
+}
+
 @inproceedings{halfond2005amnesia,
   author = {Halfond, William G. J. and Orso, Alessandro},
   title = {{AMNESIA: analysis and monitoring for NEutralizing SQL-injection attacks}},
@@ -348,6 +372,17 @@
   url = {https://www.usenix.org/conference/usenix-security-11/fast-and-precise-sanitizer-analysis-bek}
 }
 
+@inproceedings{hoschele2016autogram,
+  author = {Höschele, Matthias and Zeller, Andreas},
+  title = {{Mining input grammars from dynamic taints}},
+  booktitle = {Proceedings of the 31st IEEE/ACM International Conference on Automated Software Engineering},
+  pages = {720--725},
+  publisher = {ACM},
+  year = {2016},
+  doi = {10.1145/2970276.2970321},
+  url = {https://doi.org/10.1145/2970276.2970321}
+}
+
 @misc{iddweb,
   author = {{intent-driven.dev}},
   title = {{Intent-Driven Development}},
@@ -378,6 +413,17 @@
   year = {2014},
   doi = {10.1145/2643134},
   url = {https://doi.org/10.1145/2643134}
+}
+
+@inproceedings{kulkarni2021arvada,
+  author = {Kulkarni, Neil and Lemieux, Caroline and Sen, Koushik},
+  title = {{Learning Highly Recursive Input Grammars}},
+  booktitle = {2021 36th IEEE/ACM International Conference on Automated Software Engineering (ASE)},
+  pages = {456--467},
+  publisher = {IEEE},
+  year = {2021},
+  doi = {10.1109/ase51524.2021.9678879},
+  url = {https://doi.org/10.1109/ase51524.2021.9678879}
 }
 
 @inproceedings{lahiri2024aiware,
@@ -668,11 +714,27 @@
   note = {Published 2025-09-02; accessed 2026-10-08}
 }
 
+@misc{sqlitedocsfidelity,
+  author = {{SQLite Project}},
+  title = {{PRAGMA parser\_trace; How SQLite Is Tested; TH3; The Lemon LALR(1) Parser Generator}},
+  url = {https://www.sqlite.org/testing.html},
+  note = {See also https://www.sqlite.org/pragma.html, https://www.sqlite.org/th3.html, https://www.sqlite.org/lemon.html; accessed 2026-10-08},
+  year = {2026}
+}
+
 @misc{sqlitelangexpr,
   author = {{SQLite Project}},
   title = {{SQL Language Expressions (literal values)} and {Quirks, Caveats, and Gotchas in SQLite}},
   url = {https://www.sqlite.org/lang_expr.html},
   note = {See also https://www.sqlite.org/quirks.html; accessed 2026-10-08},
+  year = {2026}
+}
+
+@misc{sqliteparsey,
+  author = {{SQLite Project}},
+  title = {{SQLite source: src/parse.y (Lemon LALR(1) grammar), src/tokenize.c (tokenizer), src/resolve.c (name resolution), src/treeview.c (parse-tree printer)}},
+  url = {https://sqlite.org/src/file?name=src/parse.y},
+  note = {Mirror used: https://github.com/sqlite/sqlite (master); accessed 2026-10-08},
   year = {2026}
 }
 
