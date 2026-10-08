@@ -1,6 +1,6 @@
 # Intent: Provably injection-free code from AI agents
 
-> **Status:** draft. Grilling round 1 is still open, and each decision goes into the log below once the owner answers it. Literature review v1 is in [docs/literature-review.md](docs/literature-review.md), with its BibTeX in [docs/references.bib](docs/references.bib).
+> **Status:** draft. Round 1 was decided on 2026-10-08 and grilling round 2 is open. Each decision goes into the log below once the owner answers it. Literature review v1 is in [docs/literature-review.md](docs/literature-review.md), with its BibTeX in [docs/references.bib](docs/references.bib).
 
 ## Original (German, verbatim)
 
@@ -25,37 +25,47 @@ Translator's notes:
 - "eine Injection Schwachstelle" can mean one concrete vulnerability or one class of injection (Q7).
 - "deterministischer automatischer Beweiser" can mean an automated prover (for example an SMT solver) or a checker for a proof the agent wrote (Q5).
 
-## Open questions (round 1)
+## Open questions (round 2)
 
 The recommended answer is in parentheses.
 
-1. Purpose: is this a research prototype rather than a product? (yes)
-2. Definition of done: a single `make demo` that checks the proof offline and deterministically, rejects the vulnerable variant, and shows the exploit failing on the verified variant. A separate, optional `make agent` regenerates the code live. (yes)
-3. Meaning of "injection-free":
-   - output is built only by an unparser;
-   - `parse_decode(unparse_encode(t)) = t` holds for all trees `t`, including trees whose data tokens contain arbitrary strings (the extended round-trip of Hermerschmidt et al. 2015);
-   - untrusted input enters the tree only as literal leaves (McHammerCoder condition 3).
+13. Proof tool: Dafny, with the example app compiled to Python and run with Python's built-in `sqlite3`. This replaces the round-1 lean towards F\*, because Dafny has the strongest evidence that LLMs can write its proofs and compiles to mainstream languages. (yes)
+14. Two layers:
+    - an SQL layer that I write and prove once against the approved theorem, then freeze;
+    - an application layer written by the agent, where R2 and R3 hold through Dafny's types and modules: untrusted input can only become literals, identifiers come from an allowlist, and the unparser is the only source of executable queries;
+    - the Python glue is frozen framework code;
+    - `make agent` regenerates the application layer only.
 
-   See section 2.7 of the literature review. (yes)
-4. Scope: prove injection-freedom only, and cover functional behavior with tests. (yes)
-5. Trust model, following proof-carrying code:
-   - the LLM is untrusted;
-   - the pinned checker is the only judge;
-   - humans own the theorems, which are frozen;
-   - no admits or axioms are allowed;
-   - an explicit TCB document lists everything that remains trusted.
+    (yes)
+15. SQL subset: `SELECT … FROM … [WHERE …]` with comparisons, `AND`/`OR`/`NOT`, parentheses, allowlisted column names, string and integer literals. The unparser fully parenthesizes. `LIKE … ESCAPE` is a stretch goal for nested encoding. (yes)
+16. Example app: a command-line user directory (`userdir search <name>`) on a seeded SQLite database with a secret column. The vulnerable variant concatenates strings and leaks the secrets through a `UNION` exploit. The app's intent is in `examples/userdir/INTENT.md`. (yes)
+17. Differential tests against the real SQLite: string literals must decode back to the original, and `EXPLAIN` structure must not depend on the data. Known SQLite quirks are handled explicitly: identifiers come only from the schema, and input with NUL is rejected, so the theorem covers NUL-free data. (yes)
+18. Agent harness: Claude Code headless in the DevContainer, using your own login or `ANTHROPIC_API_KEY` (never committed). Budget of 5 attempts or 30 minutes; the gate decides success; transcripts are saved. (yes)
+19. The gate checks, in order:
+    1. frozen files match the manifest hashes;
+    2. there are no proof-skipping constructs;
+    3. everything verifies with pinned Dafny and Z3 versions and resource limits;
+    4. functional and exploit tests pass.
 
-   (yes)
-6. The verified code is the code that runs. There is no hand-written model of other code. (yes)
-7. First target: SQL injection against SQLite, on a small SQL subset. (yes)
-8. F* and Coq are examples. The prover is picked after the literature review, against explicit criteria. The comparison is in section 7 of the literature review; the current lean is F*, with Dafny as runner-up. (yes)
-9. The literature review comes first: `docs/literature-review.md` plus `references.bib`. (yes)
-10. "Always" is enforced by a deterministic gate (CLI, pre-commit, CI) that fails closed. Agent adapters are thin layers on top, Claude Code first. (yes)
-11. DevContainer host: Docker with VS Code or the devcontainer CLI, on both x86_64 and arm64. (yes)
-12. This file is the single source of truth, and all docs are in English. (yes)
+    It runs as a pre-commit hook, in GitHub Actions and as a Claude Code hook. (yes)
+20. Theorem approval: each theorem statement comes to the owner as a pull request with a plain-English reading and a list of what it does not cover. Approval updates the manifest. (yes)
+21. License: switch from GPLv3 to Apache-2.0, so that other projects can adopt the gate, skill and SQL layer. (yes)
+22. Evaluation: 10 runs of `make agent` with success rate, time and cost, plus mutation tests showing the gate rejects broken encoders and weakened theorems. (yes)
+23. DevContainer: built locally from a Dockerfile with identical steps on arm64 and x86_64. A prebuilt image on GitHub's registry is added only if the build takes longer than about 10 minutes. (yes)
 
 ## Decision log
 
 | # | Question | Decision | Date |
 |---|----------|----------|------|
-| – | (no decisions yet) | | |
+| 1 | Purpose | Research prototype first. Turning it into a product is a later intent. | 2026-10-08 |
+| 2 | Definition of done | `make demo` re-checks the committed agent-generated code and proof offline and deterministically. It rejects a vulnerable variant and runs an exploit that succeeds only against that variant. `make agent` (live LLM) is optional and not part of pass/fail. | 2026-10-08 |
+| 3 | Meaning of injection-free | Output is built only by an unparser. `parse_decode(unparse_encode(t)) = t` holds for all trees, including data tokens with arbitrary strings. Untrusted input appears only as literal leaves. | 2026-10-08 |
+| 4 | Scope of the proof | Only injection-freedom is proven. Functional behavior is covered by tests. | 2026-10-08 |
+| 5 | Trust model | Proof-carrying code. The LLM is untrusted, and a pinned deterministic checker is the only judge. Claude drafts the theorem statements, the owner approves them, and they are then frozen (hash-pinned). Proof-skipping constructs are rejected. Everything still trusted is listed in a TCB document. | 2026-10-08 |
+| 6 | Proven code is running code | The generated code is proven, and exactly that code is executed. The owner said, "I don't care in which language". No hand-written model of other code is used. | 2026-10-08 |
+| 7 | First target | SQL injection against SQLite, on a small SQL subset, with one vulnerable query in the example app. | 2026-10-08 |
+| 8 | Prover | F\* and Coq are only examples. The tool is chosen after the literature review, against explicit criteria (see Q13). | 2026-10-08 |
+| 9 | Literature review | Comes first, as `docs/literature-review.md` plus `docs/references.bib`. Version 1 is done. | 2026-10-08 |
+| 10 | Meaning of "always" | A deterministic gate (CLI, pre-commit hook, CI) enforces it and blocks anything unproven. Agent adapters are thin layers on top, Claude Code first. | 2026-10-08 |
+| 11 | DevContainer host | VS Code Dev Containers on arm64 and x86_64. | 2026-10-08 |
+| 12 | Way of working | This file is the single source of truth. All documentation is in English. | 2026-10-08 |
