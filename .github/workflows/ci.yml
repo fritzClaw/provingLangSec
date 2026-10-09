@@ -1,0 +1,51 @@
+name: ci
+on:
+  push:
+  pull_request:
+
+# The frozen files are still "proposed" (not yet approved by the owner with `make approve`).
+# Delete the next line once gate/manifest.json says "approved": CI then runs in strict mode.
+env:
+  GATE_ALLOW_PROPOSED: "1"
+
+jobs:
+  demo:
+    name: demo (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: x86_64
+            runner: ubuntu-24.04
+          - arch: arm64
+            runner: ubuntu-24.04-arm
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the DevContainer image
+        run: docker build -f .devcontainer/Dockerfile -t provinglangsec:ci .
+      - name: make demo inside the container
+        run: |
+          docker run --rm -e GATE_ALLOW_PROPOSED -v "$PWD":/workspaces/provingLangSec -w /workspaces/provingLangSec \
+            --user root provinglangsec:ci sh -c 'git config --global --add safe.directory "*" && make setup && make test && make demo'
+
+  stability:
+    name: proofs are stable across solver seeds
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f .devcontainer/Dockerfile -t provinglangsec:ci .
+      - name: gate with 10 random seeds
+        run: |
+          docker run --rm -e GATE_ALLOW_PROPOSED -v "$PWD":/workspaces/provingLangSec -w /workspaces/provingLangSec \
+            --user root provinglangsec:ci sh -c 'git config --global --add safe.directory "*" && python3 -I tools/gate/gate.py check examples/userdir/gate.toml --seeds 10 --skip-tests'
+
+  mutation:
+    name: the gate rejects broken and cheating submissions
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -f .devcontainer/Dockerfile -t provinglangsec:ci .
+      - run: |
+          docker run --rm -e GATE_ALLOW_PROPOSED -v "$PWD":/workspaces/provingLangSec -w /workspaces/provingLangSec \
+            --user root provinglangsec:ci sh -c 'git config --global --add safe.directory "*" && make mutation-test'

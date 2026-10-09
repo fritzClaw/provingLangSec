@@ -1,0 +1,17 @@
+[project]
+name = "userdir"
+spec_module = "UserdirSpec"    # an agent module must refine this module
+
+[agent]
+files = ["examples/userdir/src/App.dfy"]   # the only files the agent writes
+dirs = ["examples/userdir/src"]            # includes must stay in frozen files or here
+
+[verify]
+files = ["examples/userdir/src/App.dfy"]
+
+[build]
+entry = "examples/userdir/src/App.dfy"
+out = "build/verified/app"
+
+[tests]
+commands = ["python3 -I examples/userdir/tests/test_userdir.py --build build/verified/app-py"]

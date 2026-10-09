@@ -1,0 +1,17 @@
+# Changes to the frozen files (approved specifications, SQL layer, glue, tests, tooling,
+# manifest, CI) need the owner's review. See gate/manifest.json for the exact list.
+/gate/                  @fritzClaw
+/spec/                  @fritzClaw
+/lib/                   @fritzClaw
+/tools/                 @fritzClaw
+/.claude/               @fritzClaw
+/.devcontainer/         @fritzClaw
+/.github/               @fritzClaw
+/Makefile               @fritzClaw
+/examples/*/spec/       @fritzClaw
+/examples/*/glue/       @fritzClaw
+/examples/*/tests/      @fritzClaw
+/examples/*/data/       @fritzClaw
+/examples/*/stub/       @fritzClaw
+/examples/*/gate*.toml  @fritzClaw
+/examples/*/INTENT.md   @fritzClaw

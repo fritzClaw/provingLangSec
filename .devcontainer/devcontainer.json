@@ -1,0 +1,19 @@
+{
+  "name": "provingLangSec",
+  "build": { "dockerfile": "Dockerfile", "context": ".." },
+  "remoteUser": "ubuntu",
+  "workspaceFolder": "/workspaces/provingLangSec",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspaces/provingLangSec,type=bind",
+  "postCreateCommand": "make setup",
+  "remoteEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}"
+  },
+  "mounts": [
+    "source=provinglangsec-claude-config,target=/home/ubuntu/.claude,type=volume"
+  ],
+  "customizations": {
+    "vscode": {
+      "extensions": ["dafny-lang.ide-vscode", "anthropic.claude-code"]
+    }
+  }
+}

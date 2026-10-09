@@ -1,0 +1,17 @@
+[project]
+name = "cmdline"
+spec_modules = ["CmdTheorem", "CmdAppSpec"]   # agent modules must refine both
+
+[agent]
+files = ["examples/cmdline/src/CmdProof.dfy", "examples/cmdline/src/CmdApp.dfy"]
+dirs = ["examples/cmdline/src"]
+
+[verify]
+files = ["examples/cmdline/src/CmdProof.dfy", "examples/cmdline/src/CmdApp.dfy"]
+
+[build]
+entry = "examples/cmdline/src/CmdApp.dfy"
+out = "build/cmdline/app"
+
+[tests]
+commands = ["python3 -I examples/cmdline/tests/test_cmdline.py --build build/cmdline/app-py"]

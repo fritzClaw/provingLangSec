@@ -1,0 +1,17 @@
+[project]
+name = "cmdline (vulnerable variant)"
+spec_modules = ["CmdTheorem", "CmdAppSpec"]
+
+[agent]
+files = ["examples/cmdline/src/CmdProof.dfy", "examples/cmdline/src/CmdAppVulnerable.dfy"]
+dirs = ["examples/cmdline/src"]
+
+[verify]
+files = ["examples/cmdline/src/CmdProof.dfy", "examples/cmdline/src/CmdAppVulnerable.dfy"]
+
+[build]
+entry = "examples/cmdline/src/CmdAppVulnerable.dfy"
+out = "build/cmdline-vulnerable/app"
+
+[tests]
+commands = []

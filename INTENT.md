@@ -1,6 +1,6 @@
 # Intent: Provably injection-free code from AI agents
 
-> **Status:** grilling rounds 1–3 were decided on 2026-10-08 and 2026-10-09. The consolidated intent below now waits for the owner's confirmation before implementation starts. The literature review is in [docs/literature-review.md](docs/literature-review.md), with its BibTeX in [docs/references.bib](docs/references.bib).
+> **Status:** grilling rounds 1–3 were decided on 2026-10-08 and 2026-10-09. Implementation of milestones 1–6 is done and waits for the owner's approval of the frozen files (see *Implementation status*). The literature review is in [docs/literature-review.md](docs/literature-review.md), with its BibTeX in [docs/references.bib](docs/references.bib).
 
 ## Original (German, verbatim)
 
@@ -84,6 +84,35 @@ These are decided when the work reaches them:
 
 - How the toy interpreter in the generality check (milestone 6) parses its custom language. Q27 covers SQLite only.
 - Stage 2 of Q24, the generic engine, and validating SQLite's generated parser. Both come after the prototype.
+
+## Implementation status (2026-10-09)
+
+Milestones 1–6 are implemented. Milestone 7 (the evaluation) needs live agent runs and is not done. What was run, and where:
+
+| Milestone | State | Evidence |
+|---|---|---|
+| 1. Framework skeleton | done | DevContainer image builds; `make setup`, `make test` and `make demo` pass inside it as the non-root user (x86_64). CI workflow written (x86_64 and arm64 runners), not yet seen running |
+| 2. Theorem template and SQL layer | done | `spec/`, `lib/`: round-trip proved (304 checks), 20/20 solver seeds pass |
+| 3. Fidelity harness | done | SQLite 3.53.4 debug oracle (real tokenizer and parse tree): 111,111 exhaustive literals, 3,000 random trees, plus the runtime SQLite library |
+| 4. `userdir` example | done | gate accepts the verified app and rejects the concatenating one; the `UNION` exploit leaks all four secrets from the vulnerable app and returns nothing from the verified one |
+| 5. Agent integration | done, **untested with a live model** | `make agent` harness, prompt, hooks; tested with a stand-in for `claude` (solve, retry, idle, cheat) |
+| 6. Generality check | done, reference solution by Claude | `examples/cmdline`: command language with backslash escaping, own interpreter, proof through the same template, exploit demo |
+| 7. Evaluation | gate mutation tests done; **10 live agent runs not done** | 14 mutation scenarios (+ baseline) all behave as expected |
+
+### Deviations from the plan
+
+- **Z3 4.12.5, not the 4.16 wheel mentioned in an earlier message.** Dafny 4.11.0 is validated here with 4.12.5, and 4.12.5 is the version with official Linux binaries for both x86_64 and arm64. The archives are pinned by SHA-256.
+- **The fidelity oracle and the runtime SQLite are different versions** (3.53.4 vs. the system library, 3.45.1 on Ubuntu 24.04). Literal and query checks run on both; token and parse-tree checks only on the oracle. Recorded as gap A in `docs/TCB.md`.
+- **The in-container agent does not draft specifications yet.** The specifications (`UserdirSpec`, `CmdAppSpec`, `CmdLang`) and the reference solutions were written by Claude in the cloud session. `make agent` runs the implementation phase against an approved specification. The "agent drafts the specification, owner approves" flow of Q25 is still manual.
+- **The generality check was not done by the in-container agent.** Q24 asked for the agent to define and prove a second language on its own. The second language and its proof are a reference solution; the agent stub exists (`examples/cmdline/stub/`) so `make agent --project examples/cmdline/gate.toml` can attempt it.
+- **Everything frozen is only *proposed*.** The owner has not yet run `make approve`. CI runs with `GATE_ALLOW_PROPOSED=1` until then.
+- **The pre-tool hook is active only during agent runs** (`GATE_AGENT_RUN=1`). Otherwise it would also block the owner and the framework developers.
+
+### What the owner does next
+
+1. Read `docs/TCB.md` and the `READING.md` files beside the specifications (`spec/`, `lib/`, `examples/*/spec/`).
+2. Run `make approve` to record the approval, then delete `GATE_ALLOW_PROPOSED` from `.github/workflows/ci.yml`.
+3. Run `make agent` (needs your Claude login or `ANTHROPIC_API_KEY`) and, for the evaluation, `make agent AGENT_FLAGS="--runs 10"`.
 
 ## Decision log
 
