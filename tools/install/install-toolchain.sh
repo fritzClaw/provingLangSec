@@ -22,6 +22,14 @@ GOT=$(python3 -I -c "import hashlib,sys; print(hashlib.sha256(open(sys.argv[1],'
 python3 -I -c "import zipfile,sys; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])" "$TMP/z3.zip" "$TMP/z3"
 rm -rf "$PREFIX/z3"; mkdir -p "$PREFIX/z3"
 cp -r "$TMP"/z3/*/bin "$PREFIX/z3/bin"; chmod +x "$PREFIX/z3/bin/z3"
+# The archive must really be built for this CPU (a mislabeled archive once shipped an x86-64 binary as "arm64").
+python3 -I - "$PREFIX/z3/bin/z3" "$(uname -m)" <<'PY'
+import struct, sys
+machine = struct.unpack("<H", open(sys.argv[1], "rb").read(20)[18:20])[0]
+want = {"x86_64": 62, "amd64": 62, "aarch64": 183, "arm64": 183}[sys.argv[2]]
+if machine != want:
+    sys.exit(f"Z3 binary has ELF machine {machine}, expected {want} for {sys.argv[2]}")
+PY
 
 echo "== Dafny $DAFNY_VERSION"
 export DOTNET_CLI_TELEMETRY_OPTOUT=1 DOTNET_NOLOGO=1

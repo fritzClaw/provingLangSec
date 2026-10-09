@@ -52,8 +52,8 @@
     "tools/gate/hook.py": "69f9b70fe67eb8849ea60cba093e37a463a194495744e61d2831778d042fda7d",
     "tools/gate/mutation_test.py": "b79852647dc22a0fc8112ba03ad7b3751270b6af00df36bb81a429b995b77930",
     "tools/gate/test_gate.py": "534286b1a2aaafdc9147d8e6efea13594e53b62a9e4558fdf9893e7fd9e3dd8e",
-    "tools/install/install-toolchain.sh": "1271ca2712e95008d3f81630e7c4ef2fea70ce5ed234ae6ce6ccf1d5176ac62e",
-    "tools/versions.env": "c3a337bca47bfac629853afcf28ea5b09f9ef5d9952f4187eb1ae2e15760ada7"
+    "tools/install/install-toolchain.sh": "15f9017f6a1724c60beddf8dcc7c68800c01605c3841c536608db059c8916294",
+    "tools/versions.env": "8965ed98004fba42a6449e40a3c4151531831c91be6ef13fc0758070bdda5e35"
   },
   "frozen_roots": [
     ".claude/settings.json",

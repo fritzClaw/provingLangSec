@@ -15,7 +15,7 @@ Together: the receiver model reads exactly the intended tree, whatever the name 
 
 | # | Component | Why it is trusted | Mitigation |
 |---|---|---|---|
-| 1 | Dafny verifier (Boogie, Z3 4.12.5) | A soundness bug there would make any proof worthless | Pinned versions; `dafny audit` must report 0 findings; no skipped proofs allowed |
+| 1 | Dafny verifier (Boogie, Z3 4.13.4) | A soundness bug there would make any proof worthless | Pinned versions; `dafny audit` must report 0 findings; no skipped proofs allowed |
 | 2 | Dafny to Python compiler and the `_dafny` runtime | We assume the compiled code behaves as the verified Dafny semantics | Differential tests (`make fidelity`, `make demo`) execute the compiled code against SQLite |
 | 3 | Python, its `sqlite3` module and the system SQLite library | They execute the text | The fidelity harness runs its literal and query checks on the runtime library too. The debug oracle is a different SQLite version (3.53.4), see gap A |
 | 4 | **The parser model matches SQLite** (`Parse` in `lib/SqlSpec.dfy`) | The theorem is about our model | Tested, not proven: exhaustive literal lexing up to a bounded length, 3,000+ random trees, SQLite's own tokens and parse trees (`tools/fidelity`). See `docs/analysis/receiver-fidelity.md` |

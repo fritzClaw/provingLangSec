@@ -101,7 +101,7 @@ Milestones 1–6 are implemented. Milestone 7 (the evaluation) needs live agent 
 
 ### Deviations from the plan
 
-- **Z3 4.12.5, not the 4.16 wheel mentioned in an earlier message.** Dafny 4.11.0 is validated here with 4.12.5, and 4.12.5 is the version with official Linux binaries for both x86_64 and arm64. The archives are pinned by SHA-256.
+- **Z3 4.13.4, not the 4.16 wheel mentioned in an earlier message.** Dafny 4.11.0 is validated with 4.13.4 (all seeds pass), and 4.13.4 is the oldest version tested whose official Linux archives really contain native binaries for both x86_64 and aarch64. The official 4.12.5 and 4.13.0 "arm64" archives contain x86-64 binaries (found when the arm64 CI job failed with `Exec format error`). The archives are pinned by SHA-256, and the installer checks the ELF machine type.
 - **The fidelity oracle and the runtime SQLite are different versions** (3.53.4 vs. the system library, 3.45.1 on Ubuntu 24.04). Literal and query checks run on both; token and parse-tree checks only on the oracle. Recorded as gap A in `docs/TCB.md`.
 - **The in-container agent does not draft specifications yet.** The specifications (`UserdirSpec`, `CmdAppSpec`, `CmdLang`) and the reference solutions were written by Claude in the cloud session. `make agent` runs the implementation phase against an approved specification. The "agent drafts the specification, owner approves" flow of Q25 is still manual.
 - **The generality check was not done by the in-container agent.** Q24 asked for the agent to define and prove a second language on its own. The second language and its proof are a reference solution; the agent stub exists (`examples/cmdline/stub/`) so `make agent --project examples/cmdline/gate.toml` can attempt it.
