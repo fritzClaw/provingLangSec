@@ -1,6 +1,6 @@
 # Literature review: provably injection-free code from AI agents
 
-*Version 1.1, 2026-10-08.* This review covers the literature-review task in [INTENT.md](../INTENT.md). BibTeX for every cited work is in [`references.bib`](references.bib).
+*Version 1.2, 2026-10-09.* This review covers the literature-review task in [INTENT.md](../INTENT.md). BibTeX for every cited work is in [`references.bib`](references.bib).
 
 ## How this review was made
 
@@ -314,7 +314,7 @@ Three observations matter for this project:
 - **Lean 4** checks deterministically and produces native code. It has the strongest ecosystem of LLMs for mathematical proofs, but the lowest vericoding numbers.
 - **Verus** integrates well with Rust and has Vest as prior work. It offers no arm64 Linux binaries and sits in the middle on LLM results.
 
-The trade-off is between prior work (F\*) and the evidence that LLMs can write the proofs, together with compile targets in mainstream languages (Dafny). Our proof about textual escaping is new in any of these tools, so F\*'s prior work on binary formats helps less than it first appears. Installing Dafny on Linux arm64 works the same way as on x86_64: .NET 8, `dotnet tool install dafny`, and the `z3` binary from the official `z3-solver` 4.16.0 wheel, which ships a Linux aarch64 build. A hybrid is also possible: prove the SQL layer once in F\* or Rocq, and let application agents work in Dafny. The decision is tracked as Q13 in [INTENT.md](../INTENT.md).
+The trade-off is between prior work (F\*) and the evidence that LLMs can write the proofs, together with compile targets in mainstream languages (Dafny). Our proof about textual escaping is new in any of these tools, so F\*'s prior work on binary formats helps less than it first appears. Installing Dafny on Linux arm64 works the same way as on x86_64: .NET 8, `dotnet tool install dafny`, and the `z3` binary from the official `z3-solver` 4.16.0 wheel, which ships a Linux aarch64 build. A hybrid is also possible: prove the SQL layer once in F\* or Rocq, and let application agents work in Dafny. After a [technology experiment](../spikes/q13-dafny-vs-fstar/README.md), Q13 in [INTENT.md](../INTENT.md) chose Dafny.
 
 ## 8. Gap and positioning
 
@@ -352,7 +352,7 @@ These are the closest neighbours:
   - SQLite's quoting is simple.
   - Su and Wassermann's grammar is a ready starting point.
   - The limit for executable output languages is a further argument against starting with XSS.
-- **Q8 (proof tool)**: see section 7. Once the owner answered Q6 ("I don't care in which language"), the recommendation moved from F\* to Dafny. That choice is open as Q13.
+- **Q8 (proof tool)**: see section 7. Once the owner answered Q6 ("I don't care in which language"), the recommendation moved from F\* to Dafny. Q13 confirmed Dafny after a technology experiment.
 - **Q11 (DevContainer host)**: F\* and Lean have official arm64 builds. Dafny, Rocq and Verus need extra steps.
 - **New topics for round 2:**
   - how faithful the parser model is (R5), including SQLite's quirks;

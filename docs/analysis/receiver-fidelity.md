@@ -2,6 +2,8 @@
 
 *2026-10-08.* This analysis supports open question Q17 in [INTENT.md](../../INTENT.md).
 
+> **Decision (Q27, 2026-10-09):** the owner chose the main approach only: options 5 and 4, with the double-quote misfeature switched off and NUL rejected. The other options stay documented here for later.
+
 ## The problem
 
 The central theorem (R1) proves `parse_model(unparse(t)) = t`, where `parse_model` is *our formal model* of the receiver's parser. The guarantee carries over to the running system only if the real receiver, here SQLite, parses every text our unparser can emit the same way the model does. That is requirement R5 of the [literature review](../literature-review.md). Hermerschmidt et al. call the alternative "an idealized world, where unparsers and parsers are generated from the same grammar" [[hermerschmidt2015unparsers](#hermerschmidt2015unparsers)].

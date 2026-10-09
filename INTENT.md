@@ -1,6 +1,6 @@
 # Intent: Provably injection-free code from AI agents
 
-> **Status:** draft. Rounds 1 and 2 were decided on 2026-10-08 and grilling round 3 is open. Each decision goes into the log below once the owner answers it. Literature review v1 is in [docs/literature-review.md](docs/literature-review.md), with its BibTeX in [docs/references.bib](docs/references.bib).
+> **Status:** grilling rounds 1–3 were decided on 2026-10-08 and 2026-10-09. The consolidated intent below now waits for the owner's confirmation before implementation starts. The literature review is in [docs/literature-review.md](docs/literature-review.md), with its BibTeX in [docs/references.bib](docs/references.bib).
 
 ## Original (German, verbatim)
 
@@ -25,33 +25,65 @@ Translator's notes:
 - "eine Injection Schwachstelle" can mean one concrete vulnerability or one class of injection (Q7).
 - "deterministischer automatischer Beweiser" can mean an automated prover (for example an SMT solver) or a checker for a proof the agent wrote (Q5).
 
-## Open questions (round 3)
+## Consolidated intent
 
-The recommended answer is in parentheses.
+This section summarizes the shared understanding reached in grilling rounds 1–3. The decision log below has the details of each decision.
 
-24. Covering every output language, in two stages:
-    - Stage 1, the prototype:
-      - a language-definition format (syntax tree, encoders, parser model) plus a fixed theorem template;
-      - for each language, its round-trip proof uses a lemma library;
-      - SQL is the first definition and is built in this repo;
-      - as a generality check, the in-container agent writes a second, deliberately non-standard language and its proof on its own.
-    - Stage 2, after the prototype: one generic engine, proven once, for all definitions that pass a mechanical well-formedness check.
+### Why
 
-    (yes)
-25. Roles in the self-contained setup:
-    - Claude in the cloud session builds the framework once: the DevContainer, the gate, the theorem template, the lemma library with the SQL definition, the agent instructions and the example.
-    - Claude Code in the DevContainer writes each project's specification (untrusted inputs, allowed queries, new language definitions), gets the owner's approval, then writes the implementation and its proofs until the gate passes.
-    - The 30-minute limit is a hard stop, not an estimate. The evaluation measures the real time.
+LLM-generated code is often insecure. About 40% of Copilot's programs in security-relevant scenarios were vulnerable, and exploits worked against about half of the functionally correct backends in BaxBench (see section 6.1 of the [literature review](docs/literature-review.md)). Injections arise when a program emits text in a formal language and the receiving parser reads data as structure (Hermerschmidt et al. 2015). This project lets AI agents write code together with a machine-checked proof that its output cannot be injected into. Injection-freedom is then proven, not assumed.
 
-    (yes)
-26. Local approval of specifications: `make approve` shows each new or changed specification in plain English and records its hash in the manifest through a commit by the owner. Pull requests remain the route when working through GitHub. (yes)
-27. Parser fidelity, as in [docs/analysis/receiver-fidelity.md](docs/analysis/receiver-fidelity.md):
-    - SQLite main line (level B): the grammar subset comes from SQLite's own `parse.y`. The model is checked against an instrumented debug build of SQLite (tokens, parse trees, exhaustive literal-lexing tests up to a bounded length). The double-quote misfeature is switched off and NUL is rejected.
-    - SQLite second variant (level A): parameter binding, so untrusted data never reaches SQLite's parser.
-    - Custom languages (level A): the interpreter embeds the verified parser.
-    - Later: validate SQLite's generated parser against its grammar.
+### What
 
-    (yes)
+- **A research prototype** (Q1). It is packaged as a self-contained VS Code DevContainer for arm64 and x86_64 (Q11, Q23). Inside it, Claude Code writes the specification and the implementation together with its proofs (Q18, Q25).
+- **The property** (Q3, Q4):
+  - R1: `parse_decode(unparse_encode(t)) = t` holds for all syntax trees, including data with arbitrary strings;
+  - R2: only the unparser produces text that reaches the interpreter;
+  - R3: untrusted input appears only as literal leaves.
+
+  Only injection-freedom is proven. Functional behavior is covered by tests.
+- **The trust model** (Q5, Q20, Q26) is proof-carrying code:
+  - the agent is untrusted;
+  - a pinned, deterministic Dafny/Z3 check is the only judge;
+  - theorem statements and specifications are frozen once the owner approves them;
+  - constructs that skip a proof are rejected;
+  - everything that remains trusted is documented.
+- **The tool** (Q6, Q13) is Dafny, compiled to Python. The verified code is exactly the code that runs.
+- **The first target** (Q7, Q15, Q16) is SQL injection against SQLite, using a small `SELECT` subset. The example app `userdir` has a vulnerable variant that leaks secrets through a `UNION` exploit.
+- **Generality** (Q14, Q24): the approach covers any language emitted to an interpreter, including custom ones.
+  - Now: a language-definition format, a fixed theorem template and a lemma library.
+  - Later: a generic engine proven once.
+- **Parser fidelity** (Q17, Q27):
+  - the SQL grammar subset comes from SQLite's `parse.y`;
+  - the parser model is tested against an instrumented SQLite debug build, plus exhaustive tests of literal lexing up to a bounded length;
+  - the double-quote misfeature is switched off and NUL is rejected.
+- **"Always"** (Q10, Q19) is enforced by a deterministic gate. It checks:
+  - frozen-file hashes;
+  - that no proof-skipping constructs are used;
+  - verification with pinned versions, seed and resource limits;
+  - functional and exploit tests.
+
+  It runs as a pre-commit hook, in CI and as a Claude Code hook. CI also runs a multi-seed stability check.
+- **Done** (Q2, Q22) means:
+  - `make demo` re-checks the committed code and proofs offline, rejects the vulnerable variant, and shows that the exploit fails on the verified variant;
+  - the evaluation reports the agent's success rate, time and cost over 10 runs, plus mutation tests.
+
+### How: milestones
+
+1. **Framework skeleton:** DevContainer (Dafny, Z3, Python, Claude Code, and SQLite including a debug build), Makefile, gate CLI with manifest, and CI.
+2. **Theorem template and SQL library:** the language-definition format, the SQL subset definition derived from `parse.y`, and its round-trip proof. The statements are submitted for approval (Q20, Q26).
+3. **Fidelity harness:** differential tests against the instrumented SQLite, plus exhaustive literal-lexing tests up to a bounded length.
+4. **Example app:** the `examples/userdir` intent, the vulnerable variant, the exploit, and `make demo`.
+5. **Agent integration:** agent instructions, `make agent`, `make approve`, and the Claude Code hook.
+6. **Generality check:** a custom language that the in-container agent defines and proves.
+7. **Evaluation:** 10 agent runs and mutation tests.
+
+## Open items
+
+These are decided when the work reaches them:
+
+- How the toy interpreter in the generality check (milestone 6) parses its custom language. Q27 covers SQLite only.
+- Stage 2 of Q24, the generic engine, and validating SQLite's generated parser. Both come after the prototype.
 
 ## Decision log
 
@@ -80,3 +112,7 @@ The recommended answer is in parentheses.
 | 21 | License | Apache-2.0 (applied 2026-10-08). | 2026-10-08 |
 | 22 | Evaluation | 10 `make agent` runs (success rate, time, cost), plus mutation tests on encoders and theorem statements. | 2026-10-08 |
 | 23 | DevContainer build | Built locally from a Dockerfile, with the same steps on arm64 and x86_64. A prebuilt image is added only if the build exceeds about 10 minutes. | 2026-10-08 |
+| 24 | Covering every output language | Two stages. In the prototype: a language-definition format (syntax tree, encoders, parser model) with a fixed theorem template, and per-language round-trip proofs built from a lemma library. SQL is the first definition. As a generality check, the in-container agent defines and proves a second, non-standard language on its own. Later: one generic engine, proven once, for all well-formed definitions. | 2026-10-09 |
+| 25 | Roles | Claude in the cloud session builds the framework once. Claude Code in the DevContainer writes each project's specification, gets the owner's approval, then writes the implementation and its proofs until the gate passes. The 30-minute limit is a hard stop; the evaluation measures the real time. | 2026-10-09 |
+| 26 | Approval without GitHub | `make approve` shows new or changed specifications in plain English and records their hashes in the manifest through a commit by the owner. Pull requests remain the route through GitHub. | 2026-10-09 |
+| 27 | Parser fidelity | Main approach only. The grammar subset comes from SQLite's `parse.y`. The parser model is tested against an instrumented SQLite debug build (its own tokens and parse trees) and with exhaustive literal-lexing tests up to a bounded length. The double-quote misfeature is switched off and NUL is rejected. Not pursued now: the parameter-binding variant, and validating SQLite's generated parser. | 2026-10-09 |
